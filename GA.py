@@ -2,12 +2,12 @@ import numpy as np
 
 class GeneticAlgorithm():
     def __init__(self, populationSize, nGenes, mu, sigma):
-        self.__nGenes = nGenes
-        self.__populationSize = populationSize
+        #self.__nGenes = nGenes
+        self.__popSize = populationSize
         self.__population = np.random.normal(mu, sigma, (populationSize, nGenes))
         self.__generationIdx = 0
         self.__maxFitness = 0
-        self.__fittestIndividualIdx = None
+        self.__fittestIndividual = None
      
     # Getter functions
     def getPopulation(self):
@@ -15,35 +15,41 @@ class GeneticAlgorithm():
     
     
     def getFittesetIndividual(self):
-        pass
+        return self.__fittestIndividual
     
+    
+    def getMaxFitness(self):
+        return self.__maxFitness
     
     def getGenerationIdx(self):
-        pass
+        return self.__generationIdx
     
     
     # Publict methods
-    def nextGeneration(self):
+    def nextGeneration(self, mutateProb, creepRate, crossoverProb, pTour, tourSize, nrElitism):
         # Increment idx
         self.__generationIdx += 1
         
-        fitness = np.zeros(self.__populationSize)
-        for i in range(self.__populationSize):
+        fitness = np.zeros(self.__popSize)
+        for i in range(self.__popSize):
             individual = self.__population[i,:]
+            assert individual.shape == (2,)
             fitness[i] = self.__evaluateIndividual(individual)
             if fitness[i] > self.__maxFitness:
                 self.__maxFitness = fitness[i]
-                self.__fittestIndividualIdx = i
+                self.__fittestIndividual = individual.copy()
                 
         tmpPop = self.__population.copy()
         for i in range(0, self.__popSize, 2):
-            i1 = self.__tournamentSelect(fitness, tournamentSelectionParameter, tournamentSize)
-            i2 = self.__tournamentSelect(fitness, tournamentSelectionParameter, tournamentSize)
+            i1 = self.__tournamentSelect(fitness, pTour, tourSize)
+            i2 = self.__tournamentSelect(fitness, pTour, tourSize)
             individual1 = self.__population[i1, :]
             individual2 = self.__population[i2, :]
+            assert individual1.shape == (2,), "Ind 1 is {} with i1 = {}".format(individual1, i1)
+            assert individual2.shape == (2,), "Ind 2 is {} with i2 = {}".format(individual2, i2)
             
             r = np.random.rand()
-            if r < self.__crossoverProb:
+            if r < crossoverProb:
                 newChromosomePair = self.__cross(individual1, individual2);
                 tmpPop[i1,:] = newChromosomePair[0,:]
                 tmpPop[i2,:] = newChromosomePair[1,:]
@@ -53,27 +59,26 @@ class GeneticAlgorithm():
                 
         # Mutate
         for i in range(self.__popSize):
-            tmpPop[i,:] = self.__mutate(tmpPop[i,:])
+            tmpPop[i,:] = self.__creepMutate(tmpPop[i,:], mutateProb, creepRate)
             
         # Elitism
-        fittestIndividual = tmpPop[self.__fittestIndividualIdx, :]
-        tmpPop = self.__insertFittestIndividual(tmpPop, fittestIndividual, nrFittestIndividual)
+        
+        tmpPop = self.__insertFittestIndividual(tmpPop, self.__fittestIndividual, nrElitism)
         
         self.__population = tmpPop.copy()
+        assert self.__population.shape == (self.__popSize,2)
                     
     
     # Private helper functions
     def __evaluateIndividual(self, chromosome):
-        x = self.__decodeChromosome(chromosome)
-        factor1 = 1 + (x(1) + x(2) + 1)^2 * (19-14*x(1) + 3*x(1)^2 - 14*x(2) + 6*x(1)*x(2) + 3*x(2));
-        factor2 = 30 + (2*x(1) - 3*x(2))^2 * (18-32*x(1) + 12*x(1)^2 + 48*x(2) - 36*x(1)*x(2) + 27*x(2)^2);
-        product = factor1 * factor2;
+        x = chromosome
+        product = 1 + (x[0]-3)**2 + (x[1]-2)**2
     
         f = 1/product;
         return f
     
     
-    def __decodeChromosome(self, chromosome):
+    '''def __decodeChromosome(self, chromosome):
         nVariables = 2 # This is hard coded right now
         
         x = np.zeros(nVariables);
@@ -84,26 +89,67 @@ class GeneticAlgorithm():
         for n in range(nVariables):
             for j in range(genesPerVariable):
                 i = (n-1)*genesPerVariable + j;
-                x(n) = x(n) + chromosome(i) * 2^(-j);
+                x[n] = x[n] + chromosome(i) * 2^(-j);
         
-            x(n) = -variableRange + 2*variableRange*x(n)/(1 - 2^(-genesPerVariable));
+            x[n] = -variableRange + 2*variableRange*x[n]/(1 - 2^(-genesPerVariable));
+            
+        return x'''
     
     
     def __cross(self, chromosome1, chromosome2):
-        pass
+        # Single point crossover
+        nGenes = chromosome1.shape[0]
+        crossoverPoint = np.random.randint(1, nGenes)
+        
+        newChromosomePair = np.zeros((2, nGenes))
+        for i in range(nGenes):
+            if i < crossoverPoint:
+                newChromosomePair[0,i] = chromosome1[i]
+                newChromosomePair[1,i] = chromosome2[i]
+            else:
+                newChromosomePair[0,i] = chromosome2[i]
+                newChromosomePair[1,i] = chromosome1[i]
+                
+        return newChromosomePair
+       
+    
+    def __insertFittestIndividual(self, pop, fittestIndividual, nInsertions):
+        for i in range(nInsertions):
+            pop[i,:]  = fittestIndividual
+            
+        return pop
     
     
-    def __evaluateIndividual(self, chromosome):
-        pass
+    def __creepMutate(self, chromosome, mutationProb, creepRate):
+        # To be improved
+        nGenes = chromosome.shape[0]
+        mutatedChromosome = chromosome.copy()
+        for i in range(nGenes):
+            r = np.random.rand()
+            if (r < mutationProb):
+                mutatedChromosome[i] += np.random.normal(0, creepRate)
+                
+        return mutatedChromosome
     
     
-    def __insertBestIndividual(self, population, fittestIndividual, nInsertions):
-        pass
-    
-    
-    def __mutate(chromosome, mutationProbability):
-        pass
-    
-    
-    def __tournamentSelect(fitness, pTournament, tournamentSize):
-        pass
+    def __tournamentSelect(self, fitness, pTournament, tournamentSize):
+        # Index of chromosomes in tournament
+        inTournament = np.random.randint(0, self.__popSize, tournamentSize)
+        
+        while (tournamentSize > 1):
+            r = np.random.rand()
+            fittestInTournament = np.argmax(fitness[inTournament])  
+            
+            if (r < pTournament): # Select fittest in tournament
+                idxSelected = inTournament[fittestInTournament]
+                break
+            else: # Remove the fittest chromosome from tournament
+                inTournament = np.concatenate((inTournament[0:fittestInTournament], inTournament[fittestInTournament+1:]))
+                tournamentSize -= 1
+            
+            # Select remaining chromosome when only one left
+            if (tournamentSize == 1): 
+                idxSelected = inTournament[0]
+        assert idxSelected < self.__popSize, "idxSelected is {}".format(idxSelected)
+        return idxSelected
+            
