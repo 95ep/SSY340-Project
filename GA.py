@@ -2,8 +2,14 @@ import numpy as np
 
 class GeneticAlgorithm():
     def __init__(self, populationSize, nGenes, mu, sigma):
-        #self.__nGenes = nGenes
+        self.__nGenes = nGenes
         self.__popSize = populationSize
+        #self.__networkShape
+        #prevLayerDim = 1
+        #nGenes = 0
+        #for layerDim in networkShape:
+            #nGenes += layerDim
+            
         self.__population = np.random.normal(mu, sigma, (populationSize, nGenes))
         self.__generationIdx = 0
         self.__maxFitness = 0
@@ -26,15 +32,15 @@ class GeneticAlgorithm():
     
     
     # Publict methods
-    def nextGeneration(self, mutateProb, creepRate, crossoverProb, pTour, tourSize, nrElitism):
+    def nextGeneration(self, mutateProb, creepRate, crossoverProb, pTour, tourSize, nrElitism, gymEnv, visualize=False):
         # Increment idx
         self.__generationIdx += 1
         
         fitness = np.zeros(self.__popSize)
         for i in range(self.__popSize):
             individual = self.__population[i,:]
-            assert individual.shape == (2,)
-            fitness[i] = self.__evaluateIndividual(individual)
+            assert individual.shape == (self.__nGenes,)
+            fitness[i] = self.__evaluateIndividual(individual, gymEnv, visualize)
             if fitness[i] > self.__maxFitness:
                 self.__maxFitness = fitness[i]
                 self.__fittestIndividual = individual.copy()
@@ -45,8 +51,8 @@ class GeneticAlgorithm():
             i2 = self.__tournamentSelect(fitness, pTour, tourSize)
             individual1 = self.__population[i1, :]
             individual2 = self.__population[i2, :]
-            assert individual1.shape == (2,), "Ind 1 is {} with i1 = {}".format(individual1, i1)
-            assert individual2.shape == (2,), "Ind 2 is {} with i2 = {}".format(individual2, i2)
+            assert individual1.shape == (self.__nGenes,)
+            assert individual2.shape == (self.__nGenes,)
             
             r = np.random.rand()
             if r < crossoverProb:
@@ -66,17 +72,50 @@ class GeneticAlgorithm():
         tmpPop = self.__insertFittestIndividual(tmpPop, self.__fittestIndividual, nrElitism)
         
         self.__population = tmpPop.copy()
-        assert self.__population.shape == (self.__popSize,2)
+        assert self.__population.shape == (self.__popSize, self.__nGenes)
                     
     
     # Private helper functions
-    def __evaluateIndividual(self, chromosome):
-        x = chromosome
-        product = 1 + (x[0]-3)**2 + (x[1]-2)**2
+    def __evaluateIndividual(self, chromosome, env, visualize):
+        
+        state = env.reset()
+        state = state[None,:]
+        finish_episode = False
+        fitness = 0
+        while not finish_episode:
+            if visualize:
+                env.render()
+            action = self.__getAction(chromosome, state)
+            new_state, reward, finish_episode, _ = env.step(action) 
+            state = new_state[None,:]
+            fitness += reward
+
+        return fitness
     
-        f = 1/product;
-        return f
     
+    def __getAction(self, chromosome, state):
+        inputLayer = np.ndarray((4,1), dtype=float, buffer=state)
+        assert inputLayer.shape == (4,1)
+        weights1 = np.ndarray((100,4), dtype=float, buffer = chromosome[0:400])
+        assert weights1.shape == (100,4)
+        bias1 = np.ndarray((100,1), dtype=float, buffer = chromosome[400:500])
+        assert bias1.shape == (100,1)
+        weights2 = np.ndarray((2, 100), dtype=float, buffer=chromosome[500:700])
+        assert weights2.shape == (2,100)
+        bias2 = np.ndarray((2,1), dtype=float, buffer=chromosome[700:702])
+        assert bias2.shape == (2,1)
+        
+        hidden1 = np.matmul(weights1, inputLayer) - bias1
+        # Add relu
+        hidden1 = hidden1 * (hidden1 > 0)
+        assert hidden1.shape == (100,1)
+        
+        hidden2 = np.matmul(weights2, hidden1) - bias2
+        assert hidden2.shape == (2, 1)
+        
+        action = np.argmax(hidden2)
+        
+        return action
     
     '''def __decodeChromosome(self, chromosome):
         nVariables = 2 # This is hard coded right now
