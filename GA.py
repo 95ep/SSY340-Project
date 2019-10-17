@@ -5,6 +5,7 @@ class GAActionNetwork():
     def __init__(self, networkShape, mu, sigma):
         self.__nHiddenLayers = len(networkShape) - 2
         assert self.__nHiddenLayers >= 0, "Invalid networkShape"
+
         prevLayerDim = networkShape[0]
         weigths = []
         biases = []
@@ -13,7 +14,6 @@ class GAActionNetwork():
             weigths.append(np.random.normal(mu, sigma, (layerDim, prevLayerDim)))
             biases.append(np.zeros((layerDim, 1)))
             prevLayerDim = layerDim
-
         assert len(weigths) == len(networkShape)-1
 
         self.__weights = weigths
@@ -23,6 +23,9 @@ class GAActionNetwork():
     def getAction(self, state):
         # Perhaps should force to (0, 1)
         value = np.transpose(state.copy())
+        value[0] = (value[0]+4.8)/9.6
+        value[2] = (value[2]+24*2*np.pi/360)/(48*2*np.pi/360)
+        #print("Values: {}".format(value))
         for i in range(len(self.__weights)):
             value = np.matmul(self.__weights[i], value) - self.__biases[i]
             # Add relu
@@ -94,23 +97,27 @@ class GeneticAlgorithm():
 
 
     # Publict methods
-    def nextGeneration(self, mutateProb, creepRate, crossoverProb, pTour, tourSize, nrElitism, gymEnv, visualize=False):
+    def nextGeneration(self, mutateProb, creepRate, crossoverProb, pTour, tourSize, nrElitism, gymEnv, nEvals, visualize=False):
         # Increment idx
         self.__generationIdx += 1
+        self.__maxFitness = 0
 
         fitness = np.zeros(self.__popSize)
         for i in range(self.__popSize):
             individual = self.__population[i]
             #assert individual.shape == (self.__nGenes,)
-            fitness[i] = self.__evaluateIndividual(individual, gymEnv, visualize)
+            fitness[i] = self.__evaluateIndividual(individual, gymEnv, nEvals, visualize)
+            #print("Fitness for ind {} = {}".format(i, fitness[i]))
             if fitness[i] > self.__maxFitness:
                 self.__maxFitness = fitness[i]
                 self.__fittestIndividual = copy.deepcopy(individual)
-
+        #print("Avg fitness {}".format(np.average(fitness)))
         tmpPop = self.__population.copy()
         for i in range(0, self.__popSize, 2):
             i1 = self.__tournamentSelect(fitness, pTour, tourSize)
             i2 = self.__tournamentSelect(fitness, pTour, tourSize)
+            #print("i1 = {} and i2 = {}".format(i1, i2))
+
             individual1 = copy.deepcopy(self.__population[i1])
             individual2 = copy.deepcopy(self.__population[i2])
             #assert individual1.shape == (self.__nGenes,)
@@ -120,11 +127,11 @@ class GeneticAlgorithm():
             # Cross not implemented right now
             if r < crossoverProb:
                 newChromosomePair = self.__cross(individual1, individual2);
-                tmpPop[i1] = newChromosomePair[0]
-                tmpPop[i2] = newChromosomePair[1]
+                tmpPop[i] = newChromosomePair[0]
+                tmpPop[i+1] = newChromosomePair[1]
             else:
-                tmpPop[i1] = individual1
-                tmpPop[i2] = individual2
+                tmpPop[i] = individual1
+                tmpPop[i+1] = individual2
 
         # Mutate
         for i in range(self.__popSize):
@@ -138,21 +145,24 @@ class GeneticAlgorithm():
 
 
     # Private helper functions
-    def __evaluateIndividual(self, individual, env, visualize):
-
-        state = env.reset()
-        state = state[None,:]
-        finish_episode = False
+    def __evaluateIndividual(self, individual, env, nEvals, visualize):
         fitness = 0
-        while not finish_episode:
-            if visualize:
-                env.render()
-            action = individual.getAction(state)
-            new_state, reward, finish_episode, _ = env.step(action)
-            state = new_state[None,:]
-            fitness += reward
+        #env.seed(np.random.randint(low=1000, high=1000000))
+        env.seed(123123123123)
+        for i in range(nEvals):
+            state = env.reset()
+            state = state[None,:]
+            finish_episode = False
 
-        return fitness
+            while not finish_episode:
+                if visualize:
+                    env.render()
+                action = individual.getAction(state)
+                new_state, reward, finish_episode, _ = env.step(action)
+                state = new_state[None,:]
+                fitness += reward
+
+        return fitness/nEvals
 
 
     '''def __getAction(self, chromosome, state):
@@ -222,7 +232,7 @@ class GeneticAlgorithm():
         return pop
 
 
-    def __creepMutate(self, chromosome, mutationProb, creepRate):
+    '''def __creepMutate(self, chromosome, mutationProb, creepRate):
         # To be improved
         nGenes = chromosome.shape[0]
         mutatedChromosome = chromosome.copy()
@@ -231,7 +241,7 @@ class GeneticAlgorithm():
             if (r < mutationProb):
                 mutatedChromosome[i] += np.random.normal(0, creepRate)
 
-        return mutatedChromosome
+        return mutatedChromosome'''
 
 
     def __tournamentSelect(self, fitness, pTournament, tournamentSize):
@@ -252,5 +262,6 @@ class GeneticAlgorithm():
             # Select remaining chromosome when only one left
             if (tournamentSize == 1):
                 idxSelected = inTournament[0]
-        assert idxSelected < self.__popSize, "idxSelected is {}".format(idxSelected)
+        #assert idxSelected < self.__popSize, "idxSelected is {}".format(idxSelected)
+        #print("Fitness of selected {}".format(fitness[idxSelected]))
         return idxSelected
