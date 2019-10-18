@@ -42,7 +42,7 @@ def normalizeState(state):
     return state
 
 
-popSize = 40
+popSize = 60
 networkShape = (8, 50, 50, 4)
 init_mu = 0
 init_sigma = 0.01
@@ -51,11 +51,11 @@ mutateProb = 5/3100
 creepRate = 0.001
 crossoverProb = 0
 pTour = 0.75
-tourSize = 4
-elitism = 1
+tourSize = 8
+elitism = 2
 
-nGens = 50
-nEvals = 10
+nGens = 200
+nEvals = 15
 successThres = 195
 
 lunarGA = GA.GeneticAlgorithm(populationSize=popSize, evalFunc=evaluateIndividual, networkShape=networkShape, mu=init_mu, sigma=init_sigma)
