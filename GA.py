@@ -1,5 +1,6 @@
 import numpy as np
 import copy
+import time
 
 class GAActionNetwork():
     def __init__(self, networkShape, mu, sigma):
@@ -86,7 +87,7 @@ class GeneticAlgorithm():
         fitness = np.zeros(self.__popSize)
         for i in range(self.__popSize):
             individual = self.__population[i]
-            fitness[i] = self.__evaluateIndividual(individual, gymEnv, nEvals, visualize, self.__generationIdx)
+            fitness[i] = self.__evaluateIndividual(individual, gymEnv, nEvals, visualize, np.random.randint(1,10e6))
 
             if fitness[i] > self.__maxFitness:
                 self.__maxFitness = fitness[i]
