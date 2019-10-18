@@ -81,7 +81,7 @@ class GeneticAlgorithm():
     def nextGeneration(self, mutateProb, creepRate, crossoverProb, pTour, tourSize, nrElitism, gymEnv, nEvals, visualize=False):
         # Increment idx
         self.__generationIdx += 1
-        self.__maxFitness = 0
+        self.__maxFitness = -1e6
 
         fitness = np.zeros(self.__popSize)
         for i in range(self.__popSize):
@@ -125,18 +125,6 @@ class GeneticAlgorithm():
             pop[i]  = copy.deepcopy(fittestIndividual)
 
         return pop
-
-
-    '''def __creepMutate(self, chromosome, mutationProb, creepRate):
-        # To be improved
-        nGenes = chromosome.shape[0]
-        mutatedChromosome = chromosome.copy()
-        for i in range(nGenes):
-            r = np.random.rand()
-            if (r < mutationProb):
-                mutatedChromosome[i] += np.random.normal(0, creepRate)
-
-        return mutatedChromosome'''
 
 
     def __tournamentSelect(self, fitness, pTournament, tournamentSize):
