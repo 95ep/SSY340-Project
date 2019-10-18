@@ -20,15 +20,12 @@ class GAActionNetwork():
         self.__biases = biases
 
 
-    def getAction(self, state):
-        # Perhaps should force to (0, 1)
-        value = np.transpose(state.copy())
-        value[0] = (value[0]+4.8)/9.6
-        value[2] = (value[2]+24*2*np.pi/360)/(48*2*np.pi/360)
-        #print("Values: {}".format(value))
+    def getAction(self, input_state):
+        # Forward prob through network
+        value = input_state.copy()
         for i in range(len(self.__weights)):
             value = np.matmul(self.__weights[i], value) - self.__biases[i]
-            # Add relu
+            # Apply relu
             if (i < len(self.__weights) - 1):
                 value = value * (value > 0)
 
@@ -50,28 +47,12 @@ class GAActionNetwork():
                 if (r < mutationProb):
                     b += np.random.normal(0, creepRate)
 
-        '''# To be improved
-        nGenes = chromosome.shape[0]
-        mutatedChromosome = chromosome.copy()
-        for i in range(nGenes):
-            r = np.random.rand()
-            if (r < mutationProb):
-                mutatedChromosome[i] += np.random.normal(0, creepRate)
-
-        return mutatedChromosome'''
-
 
 class GeneticAlgorithm():
-    def __init__(self, populationSize, networkShape, mu, sigma):
-        #self.__nGenes = nGenes
+    def __init__(self, populationSize, evalFunc, networkShape, mu, sigma):
         self.__popSize = populationSize
-        #self.__networkShape
-        #prevLayerDim = 1
-        #nGenes = 0
-        #for layerDim in networkShape:
-            #nGenes += layerDim
+        self.__evaluateIndividual = evalFunc
 
-        #self.__population = np.random.normal(mu, sigma, (populationSize, nGenes))
         pop = []
         for i in range(populationSize):
             pop.append(GAActionNetwork(networkShape, mu, sigma))
@@ -105,13 +86,12 @@ class GeneticAlgorithm():
         fitness = np.zeros(self.__popSize)
         for i in range(self.__popSize):
             individual = self.__population[i]
-            #assert individual.shape == (self.__nGenes,)
-            fitness[i] = self.__evaluateIndividual(individual, gymEnv, nEvals, visualize)
-            #print("Fitness for ind {} = {}".format(i, fitness[i]))
+            fitness[i] = self.__evaluateIndividual(individual, gymEnv, nEvals, visualize, self.__generationIdx)
+
             if fitness[i] > self.__maxFitness:
                 self.__maxFitness = fitness[i]
                 self.__fittestIndividual = copy.deepcopy(individual)
-        #print("Avg fitness {}".format(np.average(fitness)))
+
         tmpPop = self.__population.copy()
         for i in range(0, self.__popSize, 2):
             i1 = self.__tournamentSelect(fitness, pTour, tourSize)
@@ -122,16 +102,8 @@ class GeneticAlgorithm():
             individual2 = copy.deepcopy(self.__population[i2])
             #assert individual1.shape == (self.__nGenes,)
             #assert individual2.shape == (self.__nGenes,)
-
-            r = np.random.rand()
-            # Cross not implemented right now
-            if r < crossoverProb:
-                newChromosomePair = self.__cross(individual1, individual2);
-                tmpPop[i] = newChromosomePair[0]
-                tmpPop[i+1] = newChromosomePair[1]
-            else:
-                tmpPop[i] = individual1
-                tmpPop[i+1] = individual2
+            tmpPop[i] = individual1
+            tmpPop[i+1] = individual2
 
         # Mutate
         for i in range(self.__popSize):
@@ -145,84 +117,7 @@ class GeneticAlgorithm():
 
 
     # Private helper functions
-    def __evaluateIndividual(self, individual, env, nEvals, visualize):
-        fitness = 0
-        #env.seed(np.random.randint(low=1000, high=1000000))
-        env.seed(123123123123)
-        for i in range(nEvals):
-            state = env.reset()
-            state = state[None,:]
-            finish_episode = False
 
-            while not finish_episode:
-                if visualize:
-                    env.render()
-                action = individual.getAction(state)
-                new_state, reward, finish_episode, _ = env.step(action)
-                state = new_state[None,:]
-                fitness += reward
-
-        return fitness/nEvals
-
-
-    '''def __getAction(self, chromosome, state):
-        inputLayer = np.ndarray((4,1), dtype=float, buffer=state)
-        assert inputLayer.shape == (4,1)
-        weights1 = np.ndarray((100,4), dtype=float, buffer = chromosome[0:400])
-        assert weights1.shape == (100,4)
-        bias1 = np.ndarray((100,1), dtype=float, buffer = chromosome[400:500])
-        assert bias1.shape == (100,1)
-        weights2 = np.ndarray((2, 100), dtype=float, buffer=chromosome[500:700])
-        assert weights2.shape == (2,100)
-        bias2 = np.ndarray((2,1), dtype=float, buffer=chromosome[700:702])
-        assert bias2.shape == (2,1)
-
-        hidden1 = np.matmul(weights1, inputLayer) - bias1
-        # Add relu
-        hidden1 = hidden1 * (hidden1 > 0)
-        assert hidden1.shape == (100,1)
-
-        hidden2 = np.matmul(weights2, hidden1) - bias2
-        assert hidden2.shape == (2, 1)
-
-        action = np.argmax(hidden2)
-
-        return action'''
-
-    '''def __decodeChromosome(self, chromosome):
-        nVariables = 2 # This is hard coded right now
-
-        x = np.zeros(nVariables);
-        nGenes = chromosome.shape[1]
-        genesPerVariable = nGenes/nVariables;
-        assert (nGenes%nVariables == 0)
-
-        for n in range(nVariables):
-            for j in range(genesPerVariable):
-                i = (n-1)*genesPerVariable + j;
-                x[n] = x[n] + chromosome(i) * 2^(-j);
-
-            x[n] = -variableRange + 2*variableRange*x[n]/(1 - 2^(-genesPerVariable));
-
-        return x'''
-
-
-    def __cross(self, chromosome1, chromosome2):
-        '''# Single point crossover
-        nGenes = chromosome1.shape[0]
-        crossoverPoint = np.random.randint(1, nGenes)
-
-        newChromosomePair = np.zeros((2, nGenes))
-        for i in range(nGenes):
-            if i < crossoverPoint:
-                newChromosomePair[0,i] = chromosome1[i]
-                newChromosomePair[1,i] = chromosome2[i]
-            else:
-                newChromosomePair[0,i] = chromosome2[i]
-                newChromosomePair[1,i] = chromosome1[i]
-
-        return newChromosomePair'''
-        pass
 
 
     def __insertFittestIndividual(self, pop, fittestIndividual, nInsertions):

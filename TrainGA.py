@@ -4,7 +4,36 @@ import numpy as np
 import gym
 import matplotlib.pyplot as plt
 
-popSize = 50
+def evaluateIndividual(individual, env, nEvals, visualize, seed=123123123123):
+    fitness = 0
+    env.seed(seed)
+    for i in range(nEvals):
+        state = env.reset()
+        state = state[None,:]
+        finish_episode = False
+
+        while not finish_episode:
+            if visualize:
+                env.render()
+
+
+            action = individual.getAction(normalizeState(state))
+            new_state, reward, finish_episode, _ = env.step(action)
+            state = new_state[None,:]
+            fitness += reward
+
+    return fitness/nEvals
+
+
+def normalizeState(state):
+    # Normalize the state to work better in the network
+    state = np.transpose(state)
+    state[0] = (state[0]+4.8)/9.6
+    state[2] = (state[2]+24*2*np.pi/360)/(48*2*np.pi/360)
+    return state
+
+
+popSize = 40
 networkShape = (4, 50, 50 ,2)
 init_mu = 0
 init_sigma = 0.01
@@ -17,10 +46,10 @@ tourSize = 4
 elitism = 1
 
 nGens = 150
-nEvals = 15
+nEvals = 10
 successThres = 390
 
-cartPoleGA = GA.GeneticAlgorithm(populationSize=popSize, networkShape=networkShape, mu=init_mu, sigma=init_sigma)
+cartPoleGA = GA.GeneticAlgorithm(populationSize=popSize, evalFunc=evaluateIndividual, networkShape=networkShape, mu=init_mu, sigma=init_sigma)
 env = gym.make('CartPole-v0')
 env._max_episode_steps = 400
 
@@ -33,7 +62,7 @@ for genIdx in range(nGens):
     fitnessHist.append(genFitness)
     print("Fitness in gen {} is {}".format(genIdx, fitnessHist[genIdx]))
 
-    # Break if 5 consecutive runs above successThres
+    # Break if 5 consecutive runs above successThres. Unneccesary if using fixed seed
     if genFitness > successThres:
         convergedCount +=1
     else:
@@ -52,7 +81,8 @@ step = 0
 while not finish_episode:
     step += 1
     env.render()
-    action = fittest_ind.getAction(state)
+
+    action = fittest_ind.getAction(normalizeState(state))
     new_state, _, finish_episode, _ = env.step(action)
     state = new_state[None,:]
 
@@ -68,7 +98,7 @@ for i in range(nValidations):
     finish_episode = False
 
     while not finish_episode:
-        action = fittest_ind.getAction(state)
+        action = fittest_ind.getAction(normalizeState(state))
         new_state, reward, finish_episode, _ = env.step(action)
         valFitness += reward
         state = new_state[None,:]
