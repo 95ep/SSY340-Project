@@ -19,15 +19,15 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 env_id = 'CartPole-v1'
 policy = MlpPolicy
 multiprocessing = True
-n_cpu = 4  # Number of processes to use
-policy_kwargs = dict(act_fun=tf.nn.relu, net_arch=[32, 32])
+n_cpu = 8  # Number of processes to use
+policy_kwargs = None # dict(act_fun=tf.nn.relu, net_arch=[32, 32])
 
 # Hyperparameters
 n_steps_per_update = 128  # The number of steps to run for each environment per update (batch_size = n_steps_per_update * n_cpu) (default: 128)
 gamma = 0.99  # (0.99)
-learning_rate = 0.001  # (2.5e-4)
-n_mini_batches = 2   # The batch of size batch_size is divided into mini-batches of size batch_size / n_mini_batches, n_cpu % n_mini_batches == 0 (4)
-n_updates = 1000
+learning_rate = 2.5e-4  # (2.5e-4)
+n_mini_batches = 4  # The batch of size batch_size is divided into mini-batches of size batch_size / n_mini_batches, n_cpu % n_mini_batches == 0 (4)
+n_updates = 20
 
 batch_size = n_steps_per_update * n_cpu
 n_total_timesteps = batch_size * n_updates
