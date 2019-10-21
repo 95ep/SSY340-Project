@@ -31,27 +31,30 @@ def normalizeState(state):
     state = np.transpose(state)
     # Somewhat arbitrary normalization based on observed values
     state[0] = state[0]/10
-    state[1] = state[1]/20
+    state[1] = state[1]/30
     state[2] = state[2]/5
     state[3] = state[3]/10
-    state[4] = state[4]/20
+    state[4] = state[4]/30
     state[5] = state[5]/20
     # Clip to ensure that we are within -1 to 1
     #state = np.clip(state, -1, 1)
+    if  (np.amax(state) > 1 or np.amax(state) < -1):
+        print("Input larger than 1 by magnitude")
+        print(state)
 
     return state
 
 
 popSize = 60
-networkShape = (8, 50, 50, 4)
+networkShape = (8, 40, 4)
 init_mu = 0
 init_sigma = 0.01
 
-mutateProb = 5/3100
+mutateProb = 2/520
 creepRate = 0.001
 crossoverProb = 0
 pTour = 0.75
-tourSize = 8
+tourSize = 4
 elitism = 2
 
 nGens = 200
