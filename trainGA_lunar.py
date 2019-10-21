@@ -43,11 +43,11 @@ def normalizeState(state):
 
 
 popSize = 200
-networkShape = (8, 100, 4)
+networkShape = (8, 64, 64, 4)
 init_mu = 0
 init_sigma = 0.01
 
-mutateProb = 2/1300
+mutateProb = 5/5000
 creepRate = 0.001
 crossoverProb = 0
 pTour = 0.75
