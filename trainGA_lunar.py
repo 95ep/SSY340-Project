@@ -38,9 +38,6 @@ def normalizeState(state):
     state[5] = state[5]/20
     # Clip to ensure that we are within -1 to 1
     #state = np.clip(state, -1, 1)
-    if  (np.amax(state) > 1 or np.amax(state) < -1):
-        print("Input larger than 1 by magnitude")
-        print(state)
 
     return state
 
