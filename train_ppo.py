@@ -109,6 +109,7 @@ def main():
     model.learn(total_timesteps=n_total_timesteps, callback=callback)
 
     # After training, watch the agent walk
+    '''
     obs = eval_env.reset()
     for i in range(1000):
         action, _states = model.predict(obs)
@@ -117,6 +118,7 @@ def main():
             break
         eval_env.render()
     eval_env.close()
+    '''
 
     # Evaluate agent
     print(evaluate(eval_env, model))
