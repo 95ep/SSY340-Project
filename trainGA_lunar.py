@@ -42,7 +42,7 @@ def normalizeState(state):
     return state
 
 
-popSize = 200
+popSize = 100
 networkShape = (8, 64, 64, 4)
 init_mu = 0
 init_sigma = 0.01
@@ -54,7 +54,7 @@ pTour = 0.75
 tourSize = 4
 elitism = 2
 
-nGens = 100
+nGens = 150
 nEvals = 15
 successThres = 195
 
