@@ -45,19 +45,19 @@ def normalizeState(state):
     return state
 
 
-popSize = 60
-networkShape = (8, 40, 4)
+popSize = 200
+networkShape = (8, 100, 4)
 init_mu = 0
 init_sigma = 0.01
 
-mutateProb = 2/520
+mutateProb = 2/1300
 creepRate = 0.001
 crossoverProb = 0
 pTour = 0.75
 tourSize = 4
 elitism = 2
 
-nGens = 200
+nGens = 500
 nEvals = 15
 successThres = 195
 
@@ -88,22 +88,6 @@ fittest_ind = lunarGA.getFittesetIndividual()
 with open('fittest_lunar.pobj', 'wb') as lunar_file:
     pickle.dump(fittest_ind, lunar_file)
 
- # visualize one run
-state = env.reset()
-state = state[None,:]
-finish_episode = False
-fitness = 0
-while not finish_episode:
-    env.render()
-
-    action = fittest_ind.getAction(normalizeState(state))
-    new_state, reward, finish_episode, _ = env.step(action)
-    state = new_state[None,:]
-    fitness += reward
-
-print("Fitness for fittest ind in visualization {}".format(fitness))
-env.close()
-
 # validate fittest in training
 valFitness = 0
 nValidations = 150
@@ -126,4 +110,4 @@ fig, ax = plt.subplots()
 ax.plot(fitnessHist)
 ax.set_xlabel('Generation')
 ax.set_ylabel('Fitness')
-plt.show()
+plt.savefig('lunar.png')
