@@ -54,7 +54,7 @@ pTour = 0.75
 tourSize = 4
 elitism = 2
 
-nGens = 200
+nGens = 100
 nEvals = 15
 successThres = 195
 
