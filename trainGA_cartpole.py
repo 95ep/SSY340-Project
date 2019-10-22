@@ -3,6 +3,7 @@ import GA
 import numpy as np
 import gym
 import matplotlib.pyplot as plt
+import pickle
 
 def evaluateIndividual(individual, env, nEvals, visualize, seed=123123123123):
     fitness = 0
