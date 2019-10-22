@@ -54,13 +54,13 @@ cartPoleGA = GA.GeneticAlgorithm(populationSize=popSize, evalFunc=evaluateIndivi
 env = gym.make('CartPole-v0')
 env._max_episode_steps = 200
 
-fitnessHist = []
+fitnessHist = np.zeros(nGens)
 convergedCount = 0
 for genIdx in range(nGens):
     cartPoleGA.nextGeneration(mutateProb=mutateProb, creepRate=creepRate, crossoverProb=crossoverProb,
                           pTour=pTour, tourSize=tourSize, nrElitism=elitism, gymEnv = env, nEvals=nEvals, visualize=False)
     genFitness = cartPoleGA.getMaxFitness()
-    fitnessHist.append(genFitness)
+    fitnessHist[genIdx] = genFitness
     print("Fitness in gen {} is {}".format(genIdx, fitnessHist[genIdx]))
 
     # Break if 5 consecutive runs above successThres. Unneccesary if using fixed seed
@@ -74,9 +74,11 @@ for genIdx in range(nGens):
 env.close()
 fittest_ind = cartPoleGA.getFittesetIndividual()
 
-# Save fittest to file
+# Save fittest to file and save trainingFitness
 with open('fittest_cartpole.pobj', 'wb') as lunar_file:
     pickle.dump(fittest_ind, lunar_file)
+
+np.save('lunar_fitness_training.npy', fitnessHist)
 
 # validate fittest in training
 valFitness = 0
