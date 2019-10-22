@@ -78,7 +78,7 @@ fittest_ind = cartPoleGA.getFittesetIndividual()
 with open('fittest_cartpole.pobj', 'wb') as lunar_file:
     pickle.dump(fittest_ind, lunar_file)
 
-np.save('lunar_fitness_training.npy', fitnessHist)
+np.save('cartpole_fitness_training.npy', fitnessHist)
 
 # validate fittest in training
 valFitness = 0
