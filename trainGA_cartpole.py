@@ -42,8 +42,8 @@ mutateProb = 5/4610
 creepRate = 0.001
 crossoverProb = 0
 pTour = 0.75
-tourSize = 8
-elitism = 4
+tourSize = 4
+elitism = 2
 
 nGens = 150
 nEvals = 15
@@ -73,6 +73,10 @@ for genIdx in range(nGens):
 env.close()
 fittest_ind = cartPoleGA.getFittesetIndividual()
 
+# Save fittest to file
+with open('fittest_cartpole.pobj', 'wb') as lunar_file:
+    pickle.dump(fittest_ind, lunar_file)
+
 # validate fittest in training
 valFitness = 0
 nValidations = 500
@@ -95,4 +99,4 @@ fig, ax = plt.subplots()
 ax.plot(fitnessHist)
 ax.set_xlabel('Generation')
 ax.set_ylabel('Fitness')
-plt.show()
+plt.savefig('cartpole.png')
