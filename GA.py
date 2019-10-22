@@ -87,7 +87,7 @@ class GeneticAlgorithm():
         fitness = np.zeros(self.__popSize)
         for i in range(self.__popSize):
             individual = self.__population[i]
-            fitness[i] = self.__evaluateIndividual(individual, gymEnv, nEvals, visualize, 0*np.random.randint(1,10e6))
+            fitness[i] = self.__evaluateIndividual(individual, gymEnv, nEvals, visualize, np.random.randint(1,10e6))
 
             if fitness[i] > self.__maxFitness:
                 self.__maxFitness = fitness[i]

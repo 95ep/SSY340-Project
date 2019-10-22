@@ -33,12 +33,12 @@ def normalizeState(state):
     return state
 
 
-popSize = 40
-networkShape = (4, 50, 50 ,2)
+popSize = 60
+networkShape = (4, 64, 64 ,2)
 init_mu = 0
 init_sigma = 0.01
 
-mutateProb = 5/2900
+mutateProb = 5/4610
 creepRate = 0.001
 crossoverProb = 0
 pTour = 0.75
@@ -47,11 +47,11 @@ elitism = 1
 
 nGens = 150
 nEvals = 10
-successThres = 390
+successThres = 195
 
 cartPoleGA = GA.GeneticAlgorithm(populationSize=popSize, evalFunc=evaluateIndividual, networkShape=networkShape, mu=init_mu, sigma=init_sigma)
 env = gym.make('CartPole-v0')
-env._max_episode_steps = 400
+env._max_episode_steps = 200
 
 fitnessHist = []
 convergedCount = 0
@@ -72,22 +72,6 @@ for genIdx in range(nGens):
 
 env.close()
 fittest_ind = cartPoleGA.getFittesetIndividual()
-
- # visualize one run
-state = env.reset()
-state = state[None,:]
-finish_episode = False
-step = 0
-while not finish_episode:
-    step += 1
-    env.render()
-
-    action = fittest_ind.getAction(normalizeState(state))
-    new_state, _, finish_episode, _ = env.step(action)
-    state = new_state[None,:]
-
-print("Steps for fittest ind in visualization {}".format(step))
-env.close()
 
 # validate fittest in training
 valFitness = 0
