@@ -90,6 +90,8 @@ class GeneticAlgorithm():
             fitness[i] = self.__evaluateIndividual(individual, gymEnv, nEvals, visualize, np.random.randint(1,10e6))
 
             if fitness[i] > self.__maxFitness:
+                if (i > 3):
+                    print("Fittest one is not from elitism, but idx {}".format(i))
                 self.__maxFitness = fitness[i]
                 self.__fittestIndividual = copy.deepcopy(individual)
 

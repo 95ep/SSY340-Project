@@ -42,11 +42,11 @@ mutateProb = 5/4610
 creepRate = 0.001
 crossoverProb = 0
 pTour = 0.75
-tourSize = 4
-elitism = 1
+tourSize = 8
+elitism = 4
 
 nGens = 150
-nEvals = 10
+nEvals = 15
 successThres = 195
 
 cartPoleGA = GA.GeneticAlgorithm(populationSize=popSize, evalFunc=evaluateIndividual, networkShape=networkShape, mu=init_mu, sigma=init_sigma)
@@ -67,7 +67,7 @@ for genIdx in range(nGens):
         convergedCount +=1
     else:
         convergedCount = 0
-    if convergedCount > 4:
+    if convergedCount > 6:
         break
 
 env.close()
