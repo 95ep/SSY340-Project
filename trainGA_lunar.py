@@ -89,7 +89,7 @@ np.save('lunar_fitness_training.npy', fitnessHist)
 
 # validate fittest in training
 valFitness = 0
-nValidations = 150
+nValidations = 500
 for i in range(nValidations):
     state = env.reset()
     state = state[None,:]

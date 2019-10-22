@@ -2,5 +2,6 @@
 *.pobj
 *.xlsx
 *.png
+*.npy
 .ipynb_checkpoints/
 __pycache__/
