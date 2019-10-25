@@ -1,8 +1,11 @@
 import GA
 import numpy as np
 import gym
+from gym import wrappers
+from time import time # just to have timestamps in the files
 import matplotlib.pyplot as plt
 import pickle
+
 
 
 def normalizeState(state):
@@ -21,22 +24,21 @@ def normalizeState(state):
     return state
 
 
-with open('results/lunar_cloud5.pobj', 'rb') as fittest_file:
+with open('lunar_untrained.pobj', 'rb') as fittest_file:
      fittest_ind = pickle.load(fittest_file)
 
 
 env = gym.make('LunarLander-v2')
-env.seed(int(0))
-for i in range(15):
-    state = env.reset()
-    state = state[None,:]
-    finish_episode = False
-    fitness = 0
-    while not finish_episode:
-        env.render()
-        action = fittest_ind.getAction(normalizeState(state))
-        new_state, reward, finish_episode, _ = env.step(action)
-        state = new_state[None,:]
-        fitness += reward
-    print("Fitness for episode {} is {}".format(i, fitness))
+env = wrappers.Monitor(env, './videos/' + str(time()) + '/')
+
+env.seed(int(10102131200))
+state = env.reset()
+state = state[None,:]
+finish_episode = False
+fitness = 0
+while not finish_episode:
+    action = fittest_ind.getAction(normalizeState(state))
+    new_state, reward, finish_episode, _ = env.step(action)
+    state = new_state[None,:]
+    fitness += reward
 env.close()

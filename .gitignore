@@ -3,5 +3,7 @@
 *.xlsx
 *.png
 *.npy
+*.mp4
+*.eps
 .ipynb_checkpoints/
 __pycache__/

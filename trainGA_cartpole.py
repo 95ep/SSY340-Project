@@ -68,7 +68,7 @@ for genIdx in range(nGens):
         convergedCount +=1
     else:
         convergedCount = 0
-    if convergedCount > 6:
+    if convergedCount > 4:
         break
 
 env.close()
